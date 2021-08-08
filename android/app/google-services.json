@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "123185749451",
+    "project_id": "highway-cop",
+    "storage_bucket": "highway-cop.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123185749451:android:59345757d8c4a9f3bbaa4e",
+        "android_client_info": {
+          "package_name": "all.road.accidents"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123185749451-2ivhq1keb0i9flhqib8bhl1hkpqdb1pa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "all.road.accidents",
+            "certificate_hash": "1f092dd29886f7a7e818c3468d79cca571af3d31"
+          }
+        },
+        {
+          "client_id": "123185749451-a2k4utj7v0kus0vg3uug2kg0qnse5hk7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYfJSFjlLea2JT46xabqD2IR9M14TPTUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123185749451-a2k4utj7v0kus0vg3uug2kg0qnse5hk7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
