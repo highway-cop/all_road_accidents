@@ -5,7 +5,33 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import 'package:geolocator/geolocator.dart';
+
 import 'RestService.dart';
+
+Future<Position> getUserPosition() async {
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+  if (!serviceEnabled) {
+    return Future.error('O serviço de localização está desativado');
+  }
+
+  LocationPermission permission = await Geolocator.checkPermission();
+
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+
+    if (permission == LocationPermission.denied) {
+      return Future.error('É necessário permitir o acesso à localização!');
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    return Future.error('O acesso à localização está bloqueado!');
+  }
+
+  return await Geolocator.getCurrentPosition();
+}
 
 class HomePage extends StatefulWidget {
   @override
@@ -19,6 +45,31 @@ class _HomePageState extends State<HomePage> {
   Completer<GoogleMapController> _controller = Completer();
 
   final cidadeController = TextEditingController();
+
+  void _getByCity() async {
+    setState(() {
+      markers = {};
+    });
+
+    final results = await RestService.getByCity(cidadeController.text);
+
+    final map = results.asMap().map((key, value) {
+      MarkerId markerId = MarkerId(key.toString());
+
+      Marker marker = Marker(markerId: markerId, position: value.location);
+
+      return MapEntry(markerId, marker);
+    });
+
+    setState(() {
+      markers.addAll(map);
+    });
+
+    Navigator.of(context).pop();
+    cidadeController.clear();
+  }
+
+  void _getNearBy() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +87,12 @@ class _HomePageState extends State<HomePage> {
         title: Text('Acidentes'),
         actions: [
           IconButton(
-            icon: Icon(Icons.near_me_outlined),
-            onPressed: () {},
-          ),
-          IconButton(
             icon: Icon(Icons.filter_alt_outlined),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
+                  title: Text("Acidentes por Cidade"),
                   content: Stack(
                     children: [
                       TextField(
@@ -59,30 +107,7 @@ class _HomePageState extends State<HomePage> {
                   actions: [
                     TextButton(
                       child: const Text('Buscar'),
-                      onPressed: () async {
-                        setState(() {
-                          markers = {};
-                        });
-
-                        final results =
-                            await RestService.getByCity(cidadeController.text);
-
-                        final map = results.asMap().map((key, value) {
-                          MarkerId markerId = MarkerId(key.toString());
-
-                          Marker marker = Marker(
-                              markerId: markerId, position: value.location);
-
-                          return MapEntry(markerId, marker);
-                        });
-
-                        setState(() {
-                          markers.addAll(map);
-                        });
-
-                        Navigator.of(context).pop();
-                        cidadeController.clear();
-                      },
+                      onPressed: _getByCity,
                     ),
                   ],
                 ),
@@ -103,18 +128,6 @@ class _HomePageState extends State<HomePage> {
                 backgroundImage: NetworkImage(photoURL),
                 backgroundColor: Colors.white,
               ),
-            ),
-            ListTile(
-              title: const Text('Item 1'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Item 2'),
-              onTap: () {
-                Navigator.pop(context);
-              },
             ),
           ],
         ),
