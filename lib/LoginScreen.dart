@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'Utils.dart';
 import 'RegisterScreen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,6 +15,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  void _login() async {
+    showLoadingOverlay(context);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Usuário/Senha incorretos')),
+        );
+      }
+    } finally {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   void dispose() {
@@ -60,21 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   ElevatedButton(
                     child: Text('ENTRAR'),
-                    onPressed: () async {
-                      try {
-                        await FirebaseAuth.instance.signInWithEmailAndPassword(
-                          email: emailController.text,
-                          password: passwordController.text,
-                        );
-                      } on FirebaseAuthException catch (e) {
-                        if (e.code == 'user-not-found' ||
-                            e.code == 'wrong-password') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Usuário/Senha incorretos')),
-                          );
-                        }
-                      }
-                    },
+                    onPressed: _login,
                   ),
                   ElevatedButton(
                     child: Text('CRIAR CONTA'),

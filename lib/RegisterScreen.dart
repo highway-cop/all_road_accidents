@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'Utils.dart';
+
 class RegisterScreen extends StatefulWidget {
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
@@ -12,6 +14,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  void _register() async {
+    showLoadingOverlay(context);
+
+    try {
+      await auth.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'weak-password':
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('A senha informada é muito fraca.'),
+            ),
+          );
+          break;
+        case 'email-already-in-use':
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Já existe uma conta associada a este e-mail.'),
+            ),
+          );
+          break;
+      }
+    } catch (e) {
+      print(e);
+    } finally {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   void dispose() {
@@ -58,35 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   ElevatedButton(
                     child: Text('CADASTRAR'),
-                    onPressed: () async {
-                      try {
-                        await auth.createUserWithEmailAndPassword(
-                          email: emailController.text,
-                          password: passwordController.text,
-                        );
-                      } on FirebaseAuthException catch (e) {
-                        switch (e.code) {
-                          case 'weak-password':
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('A senha informada é muito fraca.'),
-                              ),
-                            );
-                            break;
-                          case 'email-already-in-use':
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Já existe uma conta associada a este e-mail.'),
-                              ),
-                            );
-                            break;
-                        }
-                      } catch (e) {
-                        print(e);
-                      }
-                    },
+                    onPressed: _register,
                   ),
                 ],
               ),

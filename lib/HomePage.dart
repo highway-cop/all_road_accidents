@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:geolocator/geolocator.dart';
 
+import 'Utils.dart';
 import 'RestService.dart';
 
 Future<Position> getUserPosition() async {
@@ -47,26 +48,31 @@ class _HomePageState extends State<HomePage> {
   final cidadeController = TextEditingController();
 
   void _getByCity() async {
+    Navigator.of(context).pop();
+    showLoadingOverlay(context);
+
     setState(() {
       markers = {};
     });
 
-    final results = await RestService.getByCity(cidadeController.text);
+    try {
+      final results = await RestService.getByCity(cidadeController.text);
 
-    final map = results.asMap().map((key, value) {
-      MarkerId markerId = MarkerId(key.toString());
+      final map = results.asMap().map((key, value) {
+        MarkerId markerId = MarkerId(key.toString());
 
-      Marker marker = Marker(markerId: markerId, position: value.location);
+        Marker marker = Marker(markerId: markerId, position: value.location);
 
-      return MapEntry(markerId, marker);
-    });
+        return MapEntry(markerId, marker);
+      });
 
-    setState(() {
-      markers.addAll(map);
-    });
-
-    Navigator.of(context).pop();
-    cidadeController.clear();
+      setState(() {
+        markers.addAll(map);
+      });
+    } finally {
+      Navigator.of(context).pop();
+      cidadeController.clear();
+    }
   }
 
   void _getNearBy() async {}
