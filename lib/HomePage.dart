@@ -5,34 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import 'package:geolocator/geolocator.dart';
-
 import 'Utils.dart';
 import 'RestService.dart';
-
-Future<Position> getUserPosition() async {
-  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
-  if (!serviceEnabled) {
-    return Future.error('O serviço de localização está desativado');
-  }
-
-  LocationPermission permission = await Geolocator.checkPermission();
-
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-
-    if (permission == LocationPermission.denied) {
-      return Future.error('É necessário permitir o acesso à localização!');
-    }
-  }
-
-  if (permission == LocationPermission.deniedForever) {
-    return Future.error('O acesso à localização está bloqueado!');
-  }
-
-  return await Geolocator.getCurrentPosition();
-}
 
 class HomePage extends StatefulWidget {
   @override
@@ -45,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   Completer<GoogleMapController> _controller = Completer();
 
+  double _range = 10;
   final cidadeController = TextEditingController();
 
   void _getByCity() async {
@@ -75,7 +50,37 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _getNearBy() async {}
+  void _getNearBy() async {
+    Navigator.of(context).pop();
+    showLoadingOverlay(context);
+
+    setState(() {
+      markers = {};
+    });
+
+    try {
+      final position = await getUserPosition();
+
+      final results = await RestService.getNearBy(
+          position.longitude, position.latitude, _range);
+
+      final map = results.asMap().map((key, value) {
+        MarkerId markerId = MarkerId(key.toString());
+
+        Marker marker = Marker(markerId: markerId, position: value.location);
+
+        return MapEntry(markerId, marker);
+      });
+
+      setState(() {
+        markers.addAll(map);
+      });
+    } catch (error) {
+      showError(context, '$error');
+    } finally {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +97,41 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Acidentes'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.near_me_outlined),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => SimpleDialog(
+                  title: Text("Acidentes Próximos"),
+                  contentPadding: EdgeInsets.all(24.0),
+                  children: [
+                    StatefulBuilder(
+                      builder: (context, state) => Slider(
+                        min: 10,
+                        max: 80,
+                        divisions: 7,
+                        value: _range,
+                        label: _range.round().toString(),
+                        onChanged: (value) {
+                          state(() => _range = value);
+                        },
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          child: const Text('Buscar'),
+                          onPressed: _getNearBy,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.filter_alt_outlined),
             onPressed: () {
