@@ -17,6 +17,7 @@ class _App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Acidentes rodoviários',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
