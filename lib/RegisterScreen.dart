@@ -26,18 +26,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'weak-password':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('A senha informada é muito fraca.'),
-            ),
-          );
+          showError(context, 'A senha informada é muito fraca.');
           break;
         case 'email-already-in-use':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Já existe uma conta associada a este e-mail.'),
-            ),
-          );
+          showError(context, 'Já existe uma conta associada a este e-mail.');
           break;
       }
     } catch (e) {

@@ -26,9 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Usuário/Senha incorretos')),
-        );
+        showError(context, 'Usuário/Senha incorretos');
       }
     } finally {
       Navigator.of(context).pop();
