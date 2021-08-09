@@ -4,7 +4,7 @@ class Accident {
   final String date;
   final String city;
   final String road;
-  final String km;
+  final double km;
   final String type;
   final String reason;
 
