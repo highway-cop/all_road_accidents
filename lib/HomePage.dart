@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:all_road_accidents/Profile.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'Utils.dart';
+import 'Profile.dart';
 import 'RestService.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   Completer<GoogleMapController> _controller = Completer();
 
   double _range = 10;
+  String route = 'main';
   final cidadeController = TextEditingController();
 
   void _getByCity() async {
@@ -79,6 +82,27 @@ class _HomePageState extends State<HomePage> {
       showError(context, '$error');
     } finally {
       Navigator.of(context).pop();
+    }
+  }
+
+  Widget getRoute(String name) {
+    switch (name) {
+      case 'profile':
+        return Profile();
+      default:
+        return GoogleMap(
+          mapType: MapType.normal,
+          markers: Set.of(markers.values),
+          initialCameraPosition: CameraPosition(
+            zoom: 8,
+            target: LatLng(-25, -50),
+          ),
+          onMapCreated: (GoogleMapController controller) {
+            if (!_controller.isCompleted) {
+              _controller.complete(controller);
+            }
+          },
+        );
     }
   }
 
@@ -175,20 +199,28 @@ class _HomePageState extends State<HomePage> {
                 backgroundColor: Colors.white,
               ),
             ),
+            ListTile(
+              title: const Text('Página incial'),
+              leading: Icon(Icons.home),
+              onTap: () {
+                setState(() {
+                  route = 'main';
+                });
+              },
+            ),
+            ListTile(
+              title: const Text('Seu perfil'),
+              leading: Icon(Icons.person),
+              onTap: () {
+                setState(() {
+                  route = 'profile';
+                });
+              },
+            ),
           ],
         ),
       ),
-      body: GoogleMap(
-        mapType: MapType.normal,
-        markers: Set.of(markers.values),
-        initialCameraPosition: CameraPosition(
-          zoom: 8,
-          target: LatLng(-25, -50),
-        ),
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-      ),
+      body: getRoute(route),
     );
   }
 }
