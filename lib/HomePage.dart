@@ -4,7 +4,10 @@ import 'package:all_road_accidents/Profile.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'Utils.dart';
 import 'Profile.dart';
@@ -17,6 +20,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final auth = FirebaseAuth.instance;
+  final storage = FirebaseStorage.instance;
+
+  final picker = ImagePicker();
 
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   Completer<GoogleMapController> _controller = Completer();
@@ -50,6 +56,40 @@ class _HomePageState extends State<HomePage> {
     } finally {
       Navigator.of(context).pop();
       cidadeController.clear();
+    }
+  }
+
+  void _updateUserPicture(ImageSource source, {int imageQuality = 100}) async {
+    final file = await picker.pickImage(
+      source: source,
+      imageQuality: imageQuality,
+    );
+
+    if (file == null) return;
+
+    showLoadingOverlay(context);
+    final bytes = await file.readAsBytes();
+
+    try {
+      String uid = auth.currentUser!.uid;
+      final reference = storage.ref(uid + '.jpg');
+
+      await reference.putData(
+        bytes,
+        SettableMetadata(
+          contentType: file.mimeType,
+          contentDisposition: 'inline',
+        ),
+      );
+
+      final url = await reference.getDownloadURL();
+
+      await auth.currentUser!.updatePhotoURL(url);
+      setState(() {});
+    } catch (e) {
+      showError(context, '$e');
+    } finally {
+      Navigator.of(context).pop();
     }
   }
 
@@ -191,6 +231,7 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
+              arrowColor: Colors.transparent,
               accountName: Text(user.displayName ?? ""),
               accountEmail: Text(user.email ?? ""),
               currentAccountPicture: CircleAvatar(
@@ -198,6 +239,36 @@ class _HomePageState extends State<HomePage> {
                 backgroundImage: NetworkImage(photoURL),
                 backgroundColor: Colors.white,
               ),
+              onDetailsPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => Wrap(
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.camera_alt),
+                        title: Text('Tirar uma foto'),
+                        onTap: () async {
+                          Navigator.of(context).pop();
+
+                          _updateUserPicture(
+                            ImageSource.camera,
+                            imageQuality: 60,
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.photo),
+                        title: Text('Escolher da galeria'),
+                        onTap: () {
+                          Navigator.of(context).pop();
+
+                          _updateUserPicture(ImageSource.gallery);
+                        },
+                      )
+                    ],
+                  ),
+                );
+              },
             ),
             ListTile(
               title: const Text('Página incial'),
