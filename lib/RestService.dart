@@ -41,7 +41,7 @@ class RestService {
       Uri.https(API_URL, '/api/accidents/near', {
         'lng': lng.toString(),
         'lat': lat.toString(),
-        'range': range.toString(),
+        'range': (range * 1000).toString(),
       }),
       headers: {'Authorization': 'Bearer $token'},
     );
