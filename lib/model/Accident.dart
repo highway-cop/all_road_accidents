@@ -4,7 +4,7 @@ class Accident {
   final String date;
   final String city;
   final String road;
-  final double km;
+  final num km;
   final String type;
   final String reason;
 
@@ -29,8 +29,8 @@ class Accident {
       type: json['type'],
       reason: json['reason'],
       location: LatLng(
-        json['location']['lat'],
-        json['location']['lng'],
+        json['location']['lat'] as double,
+        json['location']['lng'] as double,
       ),
     );
   }
